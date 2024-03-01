@@ -69,6 +69,11 @@ GEM
     database_cleaner (1.8.5)
     diff-lcs (1.4.4)
     erubi (1.10.0)
+    factory_bot (6.4.6)
+      activesupport (>= 5.0.0)
+    factory_bot_rails (6.4.3)
+      factory_bot (~> 6.4)
+      railties (>= 5.0.0)
     faker (2.14.0)
       i18n (>= 1.6, < 2)
     ffi (1.13.1)
@@ -177,6 +182,7 @@ DEPENDENCIES
   bootsnap (>= 1.4.2)
   byebug
   database_cleaner
+  factory_bot_rails
   faker
   listen (~> 3.2)
   pg (>= 0.18, < 2.0)
@@ -192,4 +198,4 @@ RUBY VERSION
    ruby 3.0.0p0
 
 BUNDLED WITH
-   2.2.14
+   2.5.6
