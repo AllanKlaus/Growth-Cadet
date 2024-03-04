@@ -349,6 +349,97 @@ RSpec.describe Api::V1::DnsRecordsController, type: :controller do
   end
 
   describe '#create' do
-    # TODO
+    let(:dns_record) { build(:dns_record) }
+    let(:hostname_1) { build(:hostname) }
+    let(:hostname_2) { build(:hostname) }
+    let!(:hostname_counter) { Hostname.count(0) }
+
+    let(:payload) do
+      {
+        dns_records: {
+          ip: dns_record.ip,
+          hostnames_attributes: [
+            { hostname: hostname_1.hostname },
+            { hostname: hostname_2.hostname }
+          ]
+        }
+      }.to_json
+    end
+
+    context 'when success' do
+      context 'and all hostname passed non exists' do
+        it 'returns dns_record ip and create all hostnames' do
+          expect(Hostname.find_by(hostname: hostname_1.hostname)).to be nil
+          expect(Hostname.find_by(hostname: hostname_2.hostname)).to be nil
+
+          request.accept = 'application/json'
+          request.content_type = 'application/json'
+  
+          expect { post(:create, body: payload, format: :json) }.to change { Hostname.count(2) }
+  
+          expect(parsed_body).to have_key(:id)
+          expect(Hostname.find_by(hostname: hostname_1.hostname)).to_not be nil
+          expect(Hostname.find_by(hostname: hostname_2.hostname)).to_not be nil
+          expect(Hostname.count(0)).to_not eq hostname_counter
+        end
+      end
+
+      context 'and one hostname passed exists' do
+        let!(:hostname_2) { create(:hostname) }
+
+        it 'returns dns_record ip and create non existent hostname' do
+          expect(Hostname.find_by(hostname: hostname_1.hostname)).to be nil
+          expect(Hostname.find_by(hostname: hostname_2.hostname)).to_not be nil
+
+          request.accept = 'application/json'
+          request.content_type = 'application/json'
+  
+          expect { post(:create, body: payload, format: :json) }.to change { Hostname.count(1) }
+  
+          expect(parsed_body).to have_key(:id)
+          expect(Hostname.find_by(hostname: hostname_1.hostname)).to_not be nil
+          expect(Hostname.count(0)).to_not eq hostname_counter
+        end
+      end
+
+      context 'and all hostname passed exists' do
+        let!(:hostname_1) { create(:hostname) }
+        let!(:hostname_2) { create(:hostname) }
+
+        it 'returns dns_record ip and does not create hostname' do
+          expect(Hostname.find_by(hostname: hostname_1.hostname)).to_not be nil
+          expect(Hostname.find_by(hostname: hostname_2.hostname)).to_not be nil
+
+          request.accept = 'application/json'
+          request.content_type = 'application/json'
+  
+          expect { post(:create, body: payload, format: :json) }.to_not change { Hostname.count(0) }
+  
+          expect(parsed_body).to have_key(:id)
+        end
+      end
+    end
+
+    context 'when fail' do
+      let(:payload) do
+        {
+          dns_records: {
+            hostnames_attributes: [
+              { hostname: hostname_1.hostname },
+              { hostname: hostname_2.hostname }
+            ]
+          }
+        }.to_json
+      end
+      
+      it 'returns dns_record ip' do
+        request.accept = 'application/json'
+        request.content_type = 'application/json'
+
+        post(:create, body: payload, format: :json)
+
+        expect(parsed_body).to have_key(:error)
+      end
+    end
   end
 end
