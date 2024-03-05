@@ -3,7 +3,15 @@ module Api
     class DnsRecordsController < ApplicationController
       # GET /dns_records
       def index
-        # TODO: Implement this action
+        @dns = DnsRecord.search(PAGINATION, offset, params[:included], params[:excluded])
+
+        render json: {
+          total_records: @dns[:records].size,
+          records: @dns[:records],
+          related_hostnames: @dns[:related_hostnames],
+        }, status: :ok
+      rescue ActionController::ParameterMissing
+        render json: {}, status: :unprocessable_entity
       end
 
       # POST /dns_records
@@ -22,6 +30,14 @@ module Api
 
       def dns_record_params
         params.require(:dns_record).permit(:ip, hostnames_attributes: [:hostname])
+      end
+
+      def page
+        @page ||= params.require(:page).to_i - 1
+      end
+
+      def offset
+        page * PAGINATION
       end
     end
   end
